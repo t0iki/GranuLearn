@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id                  String   @id @default(cuid())
+  title               String
+  description         String
+  category            String
+  tags                String
+  totalEstimatedHours Float
+  difficulty          String
+  prerequisites       String
+  
+  overviewSummary     String
+  learningPath        String
+  totalChapters       Int
+  learningObjectives  String
+  
+  chapters            Chapter[]
+  glossaryTerms       GlossaryTerm[]
+  learningPaths       String
+  
+  metadata            String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  progresses          LearningProgress[]
+}
+
+model Chapter {
+  id                String   @id @default(cuid())
+  chapterId         String   @unique
+  chapterNumber     Int
+  title             String
+  description       String
+  difficulty        String
+  estimatedMinutes  Int
+  prerequisites     String
+  
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [id])
+  
+  introduction      String
+  chapterSummary    String
+  checkpoints       String
+  
+  sections          Section[]
+  keyConcepts       KeyConcept[]
+  quiz              Quiz?
+  resources         Resource[]
+  
+  nextChapterId     String?
+  nextChapterTitle  String?
+  nextChapterPreview String?
+}
+
+model Section {
+  id               String   @id @default(cuid())
+  sectionId        String   @unique
+  type             String
+  title            String
+  content          String
+  estimatedMinutes Int
+  order            Int
+  
+  chapterId        String
+  chapter          Chapter  @relation(fields: [chapterId], references: [id])
+  
+  mediaAttachments MediaAttachment[]
+  codeExamples     CodeExample[]
+}
+
+model KeyConcept {
+  id          String   @id @default(cuid())
+  term        String
+  definition  String
+  importance  String
+  
+  chapterId   String
+  chapter     Chapter  @relation(fields: [chapterId], references: [id])
+}
+
+model Quiz {
+  id        String   @id @default(cuid())
+  
+  chapterId String   @unique
+  chapter   Chapter  @relation(fields: [chapterId], references: [id])
+  
+  questions QuizQuestion[]
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  question      String
+  type          String
+  options       String?
+  correctAnswer String
+  explanation   String
+  points        Int?
+  
+  quizId        String
+  quiz          Quiz     @relation(fields: [quizId], references: [id])
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  url         String
+  description String
+  isRequired  Boolean
+  
+  chapterId   String
+  chapter     Chapter  @relation(fields: [chapterId], references: [id])
+}
+
+model MediaAttachment {
+  id        String   @id @default(cuid())
+  type      String
+  url       String?
+  data      String?
+  caption   String
+  
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id])
+}
+
+model CodeExample {
+  id          String   @id @default(cuid())
+  language    String
+  code        String
+  explanation String
+  runnable    Boolean  @default(false)
+  
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id])
+}
+
+model GlossaryTerm {
+  id               String   @id @default(cuid())
+  term             String
+  definition       String
+  firstMentionedIn String
+  
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id])
+}
+
+model LearningProgress {
+  id                   String   @id @default(cuid())
+  courseId             String
+  course               Course   @relation(fields: [courseId], references: [id])
+  
+  completedChapters    String
+  currentChapter       String
+  completionPercentage Float
+  totalTimeSpent       Int
+  lastAccessedAt       DateTime
+  
+  chapterProgress      String
+  achievements         String
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([courseId])
+}
